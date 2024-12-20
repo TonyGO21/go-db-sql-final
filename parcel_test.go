@@ -2,13 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"math/rand"
+	_ "modernc.org/sqlite"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -30,17 +29,15 @@ func getTestParcel() Parcel {
 	}
 }
 
-func setupDB() *sql.DB {
+func setupDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return db
 }
 
 // TestAddGetDelete проверяет добавление, получение и удаление посылки
 func TestAddGetDelete(t *testing.T) {
-	db := setupDB()
+	db := setupDB(t)
 	defer db.Close()
 	// prepare
 	store := NewParcelStore(db)
@@ -58,6 +55,7 @@ func TestAddGetDelete(t *testing.T) {
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
 	require.Equal(t, parcel.Client, storedParcel.Client)
+	require.Equal(t, id, storedParcel.Number)
 	require.Equal(t, parcel.Status, storedParcel.Status)
 	require.Equal(t, parcel.Address, storedParcel.Address)
 	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
@@ -74,7 +72,7 @@ func TestAddGetDelete(t *testing.T) {
 
 // TestSetAddress проверяет обновление адреса
 func TestSetAddress(t *testing.T) {
-	db := setupDB()
+	db := setupDB(t)
 	defer db.Close()
 	// prepare
 	store := NewParcelStore(db)
@@ -101,7 +99,7 @@ func TestSetAddress(t *testing.T) {
 
 // TestSetStatus проверяет обновление статуса
 func TestSetStatus(t *testing.T) {
-	db := setupDB()
+	db := setupDB(t)
 	defer db.Close()
 	// prepare
 	store := NewParcelStore(db)
@@ -128,7 +126,7 @@ func TestSetStatus(t *testing.T) {
 // TestGetByClient проверяет получение посылок по идентификатору клиента
 func TestGetByClient(t *testing.T) {
 	// prepare
-	db := setupDB()
+	db := setupDB(t)
 	defer db.Close()
 	// prepare
 	store := NewParcelStore(db)
